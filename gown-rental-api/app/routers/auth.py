@@ -31,7 +31,7 @@ def login(login_in: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == login_in.username).first()
     if not user or not verify_password(login_in.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
-    access_token = create_access_token(data={"sub": user.id})
+    access_token = create_access_token(data={"sub": str(user.id)})
     return Token(access_token=access_token)
 
 
