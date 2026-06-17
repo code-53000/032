@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root_pass
+      MYSQL_DATABASE: gown_rental
+      MYSQL_USER: gown_user
+      MYSQL_PASSWORD: gown_pass
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  gown-rental-api:
+    build: ./gown-rental-api
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: mysql+pymysql://gown_user:gown_pass@db:3306/gown_rental
+      SECRET_KEY: super-secret-key-change-in-production
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: on-failure
+
+  gown-rental-web:
+    build: ./gown-rental-web
+    ports:
+      - "3000:80"
+    depends_on:
+      - gown-rental-api
+    restart: on-failure
+
+volumes:
+  db_data:
